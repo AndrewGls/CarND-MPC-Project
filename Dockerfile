@@ -24,8 +24,7 @@ RUN bash install_ipopt.sh Ipopt-3.12.7
 RUN apt-get install -y libssl-dev
 
 ADD install-ubuntu.sh .
-#RUN bash install-ubuntu.sh
-RUN bash install-ubuntu-no-sudo.sh
+RUN bash install-ubuntu.sh
 
 # go to our home dir and copy contents of our host dir...
 WORKDIR /home
