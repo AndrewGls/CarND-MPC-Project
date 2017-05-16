@@ -8,6 +8,9 @@
 #include "Eigen-3.3/Eigen/QR"
 #include "MPC.h"
 #include "json.hpp"
+#include "matplotlibcpp.h"
+
+namespace plt = matplotlibcpp;
 
 // for convenience
 using json = nlohmann::json;
@@ -85,12 +88,30 @@ int main() {
         string event = j[0].get<string>();
         if (event == "telemetry") {
           // j[1] is the data JSON object
-          vector<double> ptsx = j[1]["ptsx"];
-          vector<double> ptsy = j[1]["ptsy"];
+          vector<double> ptsx = j[1]["ptsx"];  // Waypoints (x, y) in
+          vector<double> ptsy = j[1]["ptsy"];  //  the space of the car.
           double px = j[1]["x"];
           double py = j[1]["y"];
           double psi = j[1]["psi"];
           double v = j[1]["speed"];
+
+
+		  //  `polyfit` to fit a third order polynomial to the (x, y) coordinates.
+		  // Fits a third order polynomial y(x) = f(x) = a0 + a1*x + a2*x^2 + a3*x^3 using waypoints (x, y) to
+		  // interpolate the reference trajectory as function f(x,y) in the space of the car.
+		  Eigen::VectorXd coeffs;
+		  {
+			  Eigen::VectorXd x (ptsx.size());
+			  Eigen::VectorXd y (ptsy.size());
+			  for (size_t i = 0; i < ptsx.size(); i++) {
+				  x(i) = ptsx[i];
+				  y(i) = ptsy[i];
+			  }
+			  coeffs = polyfit(x, y, 3);
+		  }
+
+		  double cte = 0;
+		  double epsi = 0;
 
           /*
           * TODO: Calculate steeering angle and throttle using MPC.
@@ -101,11 +122,44 @@ int main() {
           double steer_value;
           double throttle_value;
 
+		  Eigen::VectorXd state(6);
+		  state << px, py, psi, v, cte, epsi;
+
+		  //vector<double> actuatotions = mpc.Solve(state, coeffs);
+
+
           json msgJson;
           msgJson["steering_angle"] = steer_value;
           msgJson["throttle"] = throttle_value;
+
+          //Display the MPC predicted trajectory 
+          vector<double> mpc_x_vals;
+          vector<double> mpc_y_vals;
+
+          //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
+          // the points in the simulator are connected by a Green line
+
+          msgJson["mpc_x"] = mpc_x_vals;
+          msgJson["mpc_y"] = mpc_y_vals;
+
+          //Display the waypoints/reference line
+          vector<double> next_x_vals;
+          vector<double> next_y_vals;
+
+          //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
+          // the points in the simulator are connected by a Yellow line
+
+          msgJson["next_x"] = next_x_vals;
+          msgJson["next_y"] = next_y_vals;
+
+
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
           std::cout << msg << std::endl;
+
+		  // Draw trajectory
+		  plt::plot(ptsx, ptsy, "r-");
+		  plt::show();
+
           // Latency
           // The purpose is to mimic real driving conditions where
           // the car does actuate the commands instantly.
