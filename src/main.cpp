@@ -36,7 +36,7 @@ string hasData(string s) {
 }
 
 // Evaluate a polynomial.
-double polyeval(Eigen::VectorXd coeffs, double x) {
+double polyeval(const Eigen::VectorXd& coeffs, double x) {
   double result = 0.0;
   for (int i = 0; i < coeffs.size(); i++) {
     result += coeffs[i] * pow(x, i);
@@ -88,12 +88,18 @@ int main() {
         string event = j[0].get<string>();
         if (event == "telemetry") {
           // j[1] is the data JSON object
-          vector<double> ptsx = j[1]["ptsx"];  // Waypoints (x, y) in
-          vector<double> ptsy = j[1]["ptsy"];  //  the space of the car.
-          double px = j[1]["x"];
-          double py = j[1]["y"];
+          const vector<double> ptsx = j[1]["ptsx"];  // Waypoints (x, y) in
+		  const vector<double> ptsy = j[1]["ptsy"];  //  the Map space.
+          double px  = j[1]["x"];
+          double py  = j[1]["y"];
           double psi = j[1]["psi"];
-          double v = j[1]["speed"];
+          double v   = j[1]["speed"];
+
+
+		  // Waypoints(x, y) in car space
+		  vector<double> cs_ptsx;
+		  vector<double> cs_ptsy;
+		  MapToCarSpace(cs_ptsx, cs_ptsy, ptsx, ptsy, psi, -px, -py);
 
 
 		  //  `polyfit` to fit a third order polynomial to the (x, y) coordinates.
@@ -110,8 +116,16 @@ int main() {
 			  coeffs = polyfit(x, y, 3);
 		  }
 
-		  double cte = 0;
-		  double epsi = 0;
+		  // The cross track error is calculated by evaluating at polynomial at x, f(x)
+		  // and subtracting y.
+		  ///double cte = polyeval(coeffs, px) - py;
+		  // use polynomial p(x) = a0 + a1 * x + a2 * x^2 + a3 * x^3
+		  double cte = polyeval(coeffs, px) - py;
+		  // Due to the sign starting at 0, the orientation error is -f'(x).
+		  /// derivative of coeffs[0] + coeffs[1] * x -> coeffs[1]
+		  // derivative of polynomial p'(x) = coeffs[1] + 2*coeffs[2] * x  + 3*coeffs[3] * x^2
+		  double epsi = -atan(poly3_derivative(coeffs, px));
+
 
           /*
           * TODO: Calculate steeering angle and throttle using MPC.
@@ -125,8 +139,19 @@ int main() {
 		  Eigen::VectorXd state(6);
 		  state << px, py, psi, v, cte, epsi;
 
-		  //vector<double> actuatotions = mpc.Solve(state, coeffs);
+		  // Returns next state: x, y, psi, v, cte, epsi, delta, a
+		  vector<double> next_state = mpc.Solve(state, coeffs);
+		  double mpc_x   = next_state[0];
+		  double mpc_y   = next_state[1];
+		  double mpc_psi = next_state[2];
+		  double mpc_v   = next_state[3];
+		  double mpc_cte = next_state[4];
+		  double mpc_epsi = next_state[5];
+		  double mpc_delta = next_state[6];
+		  double mpc_a     = next_state[7];
 
+		  steer_value = -mpc_delta;
+		  throttle_value = mpc_a;
 
           json msgJson;
           msgJson["steering_angle"] = steer_value;
@@ -136,6 +161,9 @@ int main() {
           vector<double> mpc_x_vals;
           vector<double> mpc_y_vals;
 
+		  mpc_x_vals = { 10. };
+		  mpc_y_vals = { 0. };
+
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Green line
 
@@ -143,22 +171,18 @@ int main() {
           msgJson["mpc_y"] = mpc_y_vals;
 
           //Display the waypoints/reference line
-          vector<double> next_x_vals;
-          vector<double> next_y_vals;
-
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Yellow line
-
-          msgJson["next_x"] = next_x_vals;
-          msgJson["next_y"] = next_y_vals;
+		  msgJson["next_x"] = cs_ptsx;
+		  msgJson["next_y"] = cs_ptsy;
 
 
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
           std::cout << msg << std::endl;
 
 		  // Draw trajectory
-		  plt::plot(ptsx, ptsy, "r-");
-		  plt::show();
+//		  plt::plot(ptsx, ptsy, "r-");
+//		  plt::show();
 
           // Latency
           // The purpose is to mimic real driving conditions where
