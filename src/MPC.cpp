@@ -3,6 +3,8 @@
 #include <cppad/ipopt/solve.hpp>
 #include "Eigen-3.3/Eigen/Core"
 
+using namespace Utils;
+
 using CppAD::AD;
 
 // TODO: Set the timestep length and duration

@@ -12,6 +12,8 @@
 
 namespace plt = matplotlibcpp;
 
+using namespace Utils;
+
 // for convenience
 using json = nlohmann::json;
 
@@ -87,19 +89,25 @@ int main() {
         auto j = json::parse(s);
         string event = j[0].get<string>();
         if (event == "telemetry") {
-          // j[1] is the data JSON object
-          const vector<double> ptsx = j[1]["ptsx"];  // Waypoints (x, y) in
-		  const vector<double> ptsy = j[1]["ptsy"];  //  the Map space.
-          double px  = j[1]["x"];
-          double py  = j[1]["y"];
-          double psi = j[1]["psi"];
-          double v   = j[1]["speed"];
+          // j[1] is the data JSON object, specified in the Map space.
+          const vector<double> ms_ptsx = j[1]["ptsx"];  // Waypoints (x, y) in
+		  const vector<double> ms_ptsy = j[1]["ptsy"];  //  the Map space.
+          const double ms_px  = j[1]["x"];  // position x of the car
+		  const double ms_py  = j[1]["y"];  // position y of the car
+		  const double ms_psi = j[1]["psi"]; // orientation of the car
+		  const double v   = j[1]["speed"];  // velocity of the car
 
+		  //
+		  // Data are transformed and processed in the Car space.
+		  //
+		  double px = 0;
+		  double py = 0;
+		  double psi = 0;
 
-		  // Waypoints(x, y) in car space
-		  vector<double> cs_ptsx;
-		  vector<double> cs_ptsy;
-		  MapToCarSpace(cs_ptsx, cs_ptsy, ptsx, ptsy, psi, -px, -py);
+		  // Transform waypoints(x, y) to the Car space
+		  vector<double> ptsx;
+		  vector<double> ptsy;
+		  MapToCarSpace(ptsx, ptsy, ms_ptsx, ms_ptsy, ms_psi, ms_px, ms_py);
 
 
 		  //  `polyfit` to fit a third order polynomial to the (x, y) coordinates.
@@ -116,15 +124,15 @@ int main() {
 			  coeffs = polyfit(x, y, 3);
 		  }
 
-		  // The cross track error is calculated by evaluating at polynomial at x, f(x)
-		  // and subtracting y.
-		  ///double cte = polyeval(coeffs, px) - py;
-		  // use polynomial p(x) = a0 + a1 * x + a2 * x^2 + a3 * x^3
-		  double cte = polyeval(coeffs, px) - py;
+		  // The cross track error is calculated by evaluating at polynomial at x, f(x) and subtracting y:
+		  // cte = polyeval(coeffs, px) - py,
+		  //	where px = 0 and py = 0 because this is the center of Car space.
+		  // Use polynomial p(x) = a0 + a1 * x + a2 * x^2 + a3 * x^3.
+		  double cte = polyeval(coeffs, 0);
 		  // Due to the sign starting at 0, the orientation error is -f'(x).
-		  /// derivative of coeffs[0] + coeffs[1] * x -> coeffs[1]
-		  // derivative of polynomial p'(x) = coeffs[1] + 2*coeffs[2] * x  + 3*coeffs[3] * x^2
-		  double epsi = -atan(poly3_derivative(coeffs, px));
+		  // Derivative of polynomial f'(x) = coeffs[1] + 2*coeffs[2] * x  + 3*coeffs[3] * x^2
+		  //  at point (0,0) is coeffs[1].
+		  double epsi = -atan(coeffs[1]);
 
 
           /*
@@ -161,8 +169,8 @@ int main() {
           vector<double> mpc_x_vals;
           vector<double> mpc_y_vals;
 
-		  mpc_x_vals = { 10. };
-		  mpc_y_vals = { 0. };
+		  mpc_x_vals = { mpc_x };
+		  mpc_y_vals = { mpc_y };
 
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Green line
@@ -173,8 +181,8 @@ int main() {
           //Display the waypoints/reference line
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Yellow line
-		  msgJson["next_x"] = cs_ptsx;
-		  msgJson["next_y"] = cs_ptsy;
+		  msgJson["next_x"] = ptsx;
+		  msgJson["next_y"] = ptsy;
 
 
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
