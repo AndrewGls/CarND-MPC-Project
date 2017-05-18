@@ -8,8 +8,8 @@ using namespace Utils;
 using CppAD::AD;
 
 // TODO: Set the timestep length and duration
-constexpr size_t N = 10;// 25;
-constexpr double dt = 0.15;
+constexpr size_t N = 10;//10;// 25;
+constexpr double dt = 0.05;//0.15;
 
 // This value assumes the model presented in the classroom is used.
 //
@@ -39,7 +39,7 @@ constexpr double coeff_epsi = 1.;
 constexpr double coeff_v = 1.;
 // Penalization coefficients:
 constexpr double coeff_derivative_delta = 100.; // increase smoothness driving (smoothness steering)
-constexpr double coeff_derivative_a = 1.;     // increase smoothness of acceleration
+constexpr double coeff_derivative_a = 100.;     // increase smoothness of acceleration
 constexpr double coeff_penalize_delta = 1.;   // minimizes the use of steering.
 constexpr double coeff_penalize_a = 1.;		  // minimizes the use of acceleration.
 
@@ -278,7 +278,8 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs)
 	options += "Sparse  true        reverse\n";
 	// NOTE: Currently the solver has a maximum time limit of 0.5 seconds.
 	// Change this as you see fit.
-	options += "Numeric max_cpu_time          0.5\n";
+	//options += "Numeric max_cpu_time          0.5\n";
+	options += "Numeric max_cpu_time          0.05\n";
 
 	// place to return solution
 	CppAD::ipopt::solve_result<Dvector> solution;
