@@ -27,3 +27,12 @@ sorry... do  `docker ps`... then lookup the ID (first column) ... then `docker k
 open the sh-file in Notepad++ and then Edit>EOL Conversion > Unix/OSX Format ... then save
 
 https://carnd.slack.com/messages/@jfjensen/files/F5DMCMHQT/
+
+
+=====================
+Basic Build Instructions:
+Clone this repo.
+Make a build directory: mkdir build && cd build
+Compile: cmake .. && make
+Run it: ./mpc.
+
