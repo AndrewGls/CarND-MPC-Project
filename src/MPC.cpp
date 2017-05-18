@@ -8,8 +8,8 @@ using namespace Utils;
 using CppAD::AD;
 
 // TODO: Set the timestep length and duration
-size_t N = 25;
-double dt = 0.05;
+constexpr size_t N = 25;
+constexpr double dt = 0.15;
 
 // This value assumes the model presented in the classroom is used.
 //
@@ -21,14 +21,14 @@ double dt = 0.05;
 // presented in the classroom matched the previous radius.
 //
 // This is the length from front to CoG that has a similar radius.
-const double Lf = 2.67;
+constexpr double Lf = 2.67;
 
 
 // Both the reference cross track and orientation errors are 0.
 // The reference velocity is set to 40 mph.
-double ref_cte = 0;
-double ref_epsi = 0;
-double ref_v = 40;
+constexpr double ref_cte = 0;
+constexpr double ref_epsi = 0;
+constexpr double ref_v = 40;
 
 
 // The solver takes all the state variables and actuator
