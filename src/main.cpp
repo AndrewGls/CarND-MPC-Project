@@ -100,10 +100,6 @@ int main() {
 		  //
 		  // Data are transformed and processed in the Car space.
 		  //
-		  double px = 0;
-		  double py = 0;
-		  double psi = 0;
-
 		  // Transform waypoints(x, y) to the Car space
 		  vector<double> ptsx;
 		  vector<double> ptsy;
@@ -145,7 +141,7 @@ int main() {
           double throttle_value;
 
 		  Eigen::VectorXd state(6);
-		  state << px, py, psi, v, cte, epsi;
+		  state << 0., 0., 0., v, cte, epsi; // { px, py, psi, v, cye, epsi }
 
 		  // Returns next state: x, y, psi, v, cte, epsi, delta, a
 		  vector<double> next_state = mpc.Solve(state, coeffs);

@@ -8,7 +8,7 @@ using namespace Utils;
 using CppAD::AD;
 
 // TODO: Set the timestep length and duration
-constexpr size_t N = 25;
+constexpr size_t N = 10;// 25;
 constexpr double dt = 0.15;
 
 // This value assumes the model presented in the classroom is used.
@@ -29,6 +29,19 @@ constexpr double Lf = 2.67;
 constexpr double ref_cte = 0;
 constexpr double ref_epsi = 0;
 constexpr double ref_v = 40;
+
+//
+// MPC hyperparameters, used in cost error function.
+//
+// Weights to balance cte, epsi and distance to target speed, used during the cost error calculation.
+constexpr double coeff_cte = 1.;
+constexpr double coeff_epsi = 1.;
+constexpr double coeff_v = 1.;
+// Penalization coefficients:
+constexpr double coeff_derivative_delta = 1.; // increase smoothness driving (smoothness steering)
+constexpr double coeff_derivative_a = 1.;     // increase smoothness of acceleration
+constexpr double coeff_penalize_delta = 1.;   // minimizes the use of steering.
+constexpr double coeff_penalize_a = 1.;		  // minimizes the use of acceleration.
 
 
 // The solver takes all the state variables and actuator
@@ -61,21 +74,21 @@ public:
 
 		// The part of the cost based on the reference state.
 		for (int i = 0; i < N; i++) {
-			fg[0] += CppAD::pow(vars[cte_start + i] - ref_cte, 2);
-			fg[0] += CppAD::pow(vars[epsi_start + i] - ref_epsi, 2);
-			fg[0] += CppAD::pow(vars[v_start + i] - ref_v, 2);
+			fg[0] += coeff_cte * CppAD::pow(vars[cte_start +  i] - ref_cte, 2);
+			fg[0] += coeff_epsi * CppAD::pow(vars[epsi_start + i] - ref_epsi, 2);
+			fg[0] += coeff_v * CppAD::pow(vars[v_start +    i] - ref_v, 2);
 		}
 
 		// Minimize the use of actuators.
 		for (int i = 0; i < N - 1; i++) {
-			fg[0] += CppAD::pow(vars[delta_start + i], 2);
-			fg[0] += CppAD::pow(vars[a_start + i], 2);
+			fg[0] += coeff_penalize_delta * CppAD::pow(vars[delta_start + i], 2);
+			fg[0] += coeff_penalize_a * CppAD::pow(vars[a_start + i], 2);
 		}
 
 		// Minimize the value gap between sequential actuations.
 		for (int i = 0; i < N - 2; i++) {
-			fg[0] += CppAD::pow(vars[delta_start + i + 1] - vars[delta_start + i], 2);
-			fg[0] += CppAD::pow(vars[a_start + i + 1] - vars[a_start + i], 2);
+			fg[0] += coeff_derivative_delta * CppAD::pow(vars[delta_start + i + 1] - vars[delta_start + i], 2);
+			fg[0] += coeff_derivative_a * CppAD::pow(vars[a_start + i + 1] - vars[a_start + i], 2);
 		}
 
 		//
