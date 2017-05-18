@@ -17,6 +17,9 @@ public:
 	// Solve the model given an initial state and polynomial coefficients.
 	// Return the first actuatotions.
 	vector<double> Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs);
+
+	std::vector<double> pred_path_x_;
+	std::vector<double> pred_path_y_;
 };
 
 

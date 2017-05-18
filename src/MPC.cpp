@@ -38,7 +38,7 @@ constexpr double coeff_cte = 1.;
 constexpr double coeff_epsi = 1.;
 constexpr double coeff_v = 1.;
 // Penalization coefficients:
-constexpr double coeff_derivative_delta = 1.; // increase smoothness driving (smoothness steering)
+constexpr double coeff_derivative_delta = 100.; // increase smoothness driving (smoothness steering)
 constexpr double coeff_derivative_a = 1.;     // increase smoothness of acceleration
 constexpr double coeff_penalize_delta = 1.;   // minimizes the use of steering.
 constexpr double coeff_penalize_a = 1.;		  // minimizes the use of acceleration.
@@ -160,7 +160,12 @@ public:
 //
 // MPC class definition implementation.
 //
-MPC::MPC() {}
+MPC::MPC()
+{
+	pred_path_x_.resize(N-1);
+	pred_path_y_.resize(N-1);
+}
+
 MPC::~MPC() {}
 
 vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs)
@@ -293,6 +298,12 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs)
 	std::cout << "Cost " << cost << std::endl;
 
 	// Return the first actuator values: { x, y, psi, v, cte, epsi, delta, a }
+
+	for (int i = 1; i < N; i++) {
+		pred_path_x_[i-1] = solution.x[x_start + i];
+		pred_path_y_[i-1] = solution.x[y_start + i];
+	}
+
 	return { solution.x[x_start   + 1], solution.x[y_start    + 1],
 			 solution.x[psi_start + 1], solution.x[v_start    + 1],
 			 solution.x[cte_start + 1], solution.x[epsi_start + 1],
