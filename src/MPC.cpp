@@ -5,11 +5,18 @@
 
 using namespace Utils;
 
+#define MPC_PARAMS_40MPH
+
 using CppAD::AD;
 
 // TODO: Set the timestep length and duration
-constexpr size_t N = 10;// 25;
-constexpr double dt = 0.05;//0.15;
+#ifdef MPC_PARAMS_40MPH
+constexpr size_t N = 10;
+constexpr double dt = 0.05;
+#else
+constexpr size_t N = 40/2/2;
+constexpr double dt = 2*0.1;
+#endif
 
 // This value assumes the model presented in the classroom is used.
 //
@@ -28,20 +35,37 @@ constexpr double Lf = 2.67;
 // The reference velocity is set to 40 mph.
 constexpr double ref_cte = 0;
 constexpr double ref_epsi = 0;
+#ifdef MPC_PARAMS_40MPH
 constexpr double ref_v = 40;
+#else
+constexpr double ref_v = 90;
+#endif
 
 //
 // MPC hyperparameters, used in cost error function.
 //
 // Weights to balance cte, epsi and distance to target speed, used during the cost error calculation.
+#ifdef MPC_PARAMS_40MPH
 constexpr double coeff_cte = 1.;
 constexpr double coeff_epsi = 1.;
 constexpr double coeff_v = 1.;
+#else
+constexpr double coeff_cte = 100.; //1
+constexpr double coeff_epsi = 100.; //100
+constexpr double coeff_v = 1.; //1
+#endif
 // Penalization coefficients:
+#ifdef MPC_PARAMS_40MPH
 constexpr double coeff_derivative_delta = 100.; // increase smoothness driving (smoothness steering)
-constexpr double coeff_derivative_a = 100.;     // increase smoothness of acceleration
-constexpr double coeff_penalize_delta = 1.;   // minimizes the use of steering.
-constexpr double coeff_penalize_a = 1.;		  // minimizes the use of acceleration.
+constexpr double coeff_derivative_a = 100;      // increase smoothness of acceleration
+constexpr double coeff_penalize_delta = 1.;     // minimizes the use of steering.
+constexpr double coeff_penalize_a = 1.;		    // minimizes the use of acceleration.
+#else
+constexpr double coeff_derivative_delta = 100.;//50 increase smoothness driving (smoothness steering)
+constexpr double coeff_derivative_a = 500;//10     // increase smoothness of acceleration
+constexpr double coeff_penalize_delta = 500.;//100   // minimizes the use of steering.
+constexpr double coeff_penalize_a = 100.;//100		  // minimizes the use of acceleration.
+#endif
 
 
 // The solver takes all the state variables and actuator

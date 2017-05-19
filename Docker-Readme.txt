@@ -36,3 +36,23 @@ Make a build directory: mkdir build && cd build
 Compile: cmake .. && make
 Run it: ./mpc.
 
+
+
+
+===========================
+Param set2:
+===========================
+constexpr size_t N = 40/2/2;
+constexpr double dt = 2*0.1;
+
+constexpr double ref_v = 90;
+// Weights to balance cte, epsi and distance to target speed, used during the cost error calculation.
+constexpr double coeff_cte = 100.;
+constexpr double coeff_epsi = 100.;
+constexpr double coeff_v = 1.;
+// Penalization coefficients:
+constexpr double coeff_derivative_delta = 100.; // increase smoothness driving (smoothness steering)
+constexpr double coeff_derivative_a = 500;      // increase smoothness of acceleration
+constexpr double coeff_penalize_delta = 500.;   // minimizes the use of steering.
+constexpr double coeff_penalize_a = 100.;       // minimizes the use of acceleration.
+
