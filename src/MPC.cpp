@@ -8,7 +8,7 @@ using namespace Utils;
 using CppAD::AD;
 
 // TODO: Set the timestep length and duration
-constexpr size_t N = 10;//10;// 25;
+constexpr size_t N = 10;// 25;
 constexpr double dt = 0.05;//0.15;
 
 // This value assumes the model presented in the classroom is used.
@@ -129,9 +129,6 @@ public:
 			// Only consider the actuation at time t.
 			AD<double> delta0 = vars[delta_start + i];
 			AD<double> a0 = vars[a_start + i];
-
-//			AD<double> f0 = coeffs[0] + coeffs[1] * x0;
-//			AD<double> psides0 = CppAD::atan(coeffs[1]);
 
 			// use 3rd order polynomial
 			AD<double> f0 = coeffs[0] + coeffs[1] * x0 + coeffs[2] * CppAD::pow(x0,2) + coeffs[3] * CppAD::pow(x0,3);

@@ -132,7 +132,7 @@ int main() {
 
 
           /*
-          * TODO: Calculate steeering angle and throttle using MPC.
+          * Calculates steeering angle and throttle using MPC.
           *
           * Both are in between [-1, 1].
           *
@@ -145,12 +145,12 @@ int main() {
 
 		  // Returns next state: x, y, psi, v, cte, epsi, delta, a
 		  vector<double> next_state = mpc.Solve(state, coeffs);
-		  double mpc_x   = next_state[0];
-		  double mpc_y   = next_state[1];
-		  double mpc_psi = next_state[2];
-		  double mpc_v   = next_state[3];
-		  double mpc_cte = next_state[4];
-		  double mpc_epsi = next_state[5];
+//		  double mpc_x   = next_state[0];
+//		  double mpc_y   = next_state[1];
+//		  double mpc_psi = next_state[2];
+//		  double mpc_v   = next_state[3];
+//		  double mpc_cte = next_state[4];
+//		  double mpc_epsi = next_state[5];
 		  double mpc_delta = next_state[6];
 		  double mpc_a     = next_state[7];
 
@@ -162,17 +162,8 @@ int main() {
           msgJson["throttle"] = throttle_value;
 
           //Display the MPC predicted trajectory 
-          vector<double> mpc_x_vals;
-          vector<double> mpc_y_vals;
-
-		  //mpc_x_vals = { mpc_x };
-		  //mpc_y_vals = { mpc_y };
-
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Green line
-
-//          msgJson["mpc_x"] = mpc_x_vals;
-//          msgJson["mpc_y"] = mpc_y_vals;
           msgJson["mpc_x"] = mpc.pred_path_x_;
           msgJson["mpc_y"] = mpc.pred_path_y_;
 
