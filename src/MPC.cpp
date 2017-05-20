@@ -5,17 +5,21 @@
 
 using namespace Utils;
 
-#define MPC_PARAMS_40MPH
+//#define MPC_PARAMS_40MPH
+#define MPC_PARAMS_58MPH
 
 using CppAD::AD;
 
 // TODO: Set the timestep length and duration
-#ifdef MPC_PARAMS_40MPH
+#if defined(MPC_PARAMS_40MPH)
 constexpr size_t N = 10;
-constexpr double dt = 0.05;
+constexpr double dt = 0.05; // 0.05 in optimizator !
+#elif defined(MPC_PARAMS_58MPH)
+constexpr size_t N = 10;
+constexpr double dt = 0.1; // 0.05 in optimizator !
 #else
-constexpr size_t N = 40/2/2;
-constexpr double dt = 2*0.1;
+constexpr size_t N = 25;
+constexpr double dt = 0.1;//0.1;  // 0.05 in optimizator !
 #endif
 
 // This value assumes the model presented in the classroom is used.
@@ -35,8 +39,10 @@ constexpr double Lf = 2.67;
 // The reference velocity is set to 40 mph.
 constexpr double ref_cte = 0;
 constexpr double ref_epsi = 0;
-#ifdef MPC_PARAMS_40MPH
+#if defined(MPC_PARAMS_40MPH)
 constexpr double ref_v = 40;
+#elif defined(MPC_PARAMS_58MPH)
+constexpr double ref_v = 90;
 #else
 constexpr double ref_v = 90;
 #endif
@@ -45,26 +51,35 @@ constexpr double ref_v = 90;
 // MPC hyperparameters, used in cost error function.
 //
 // Weights to balance cte, epsi and distance to target speed, used during the cost error calculation.
-#ifdef MPC_PARAMS_40MPH
+#if defined(MPC_PARAMS_40MPH)
 constexpr double coeff_cte = 1.;
 constexpr double coeff_epsi = 1.;
 constexpr double coeff_v = 1.;
+#elif defined(MPC_PARAMS_58MPH)
+constexpr double coeff_cte = 200.;
+constexpr double coeff_epsi = 100.;
+constexpr double coeff_v = 1.;
 #else
-constexpr double coeff_cte = 100.; //1
-constexpr double coeff_epsi = 100.; //100
+constexpr double coeff_cte = 20 * 200.;//100.; //1
+constexpr double coeff_epsi = 2*2* 100.;//100.; //100
 constexpr double coeff_v = 1.; //1
 #endif
 // Penalization coefficients:
-#ifdef MPC_PARAMS_40MPH
+#if defined(MPC_PARAMS_40MPH)
 constexpr double coeff_derivative_delta = 100.; // increase smoothness driving (smoothness steering)
 constexpr double coeff_derivative_a = 100;      // increase smoothness of acceleration
 constexpr double coeff_penalize_delta = 1.;     // minimizes the use of steering.
-constexpr double coeff_penalize_a = 1.;		    // minimizes the use of acceleration.
+constexpr double coeff_penalize_a = 1.;		// minimizes the use of acceleration.
+#elif defined(MPC_PARAMS_58MPH)
+constexpr double coeff_derivative_delta = 200.; // increase smoothness driving (smoothness steering)
+constexpr double coeff_derivative_a = 100.;     // increase smoothness of acceleration
+constexpr double coeff_penalize_delta = 1000.;  // minimizes the use of steering.
+constexpr double coeff_penalize_a = 50;        // minimizes the use of acceleration.
 #else
-constexpr double coeff_derivative_delta = 100.;//50 increase smoothness driving (smoothness steering)
-constexpr double coeff_derivative_a = 500;//10     // increase smoothness of acceleration
-constexpr double coeff_penalize_delta = 500.;//100   // minimizes the use of steering.
-constexpr double coeff_penalize_a = 100.;//100		  // minimizes the use of acceleration.
+constexpr double coeff_derivative_delta = 2* 4* 200.;//50 increase smoothness driving (smoothness steering)
+constexpr double coeff_derivative_a = 2* 100.;//500;//10     // increase smoothness of acceleration
+constexpr double coeff_penalize_delta = 2000.;//1000.;  // minimizes the use of steering.
+constexpr double coeff_penalize_a = 50;//100.;//100		  // minimizes the use of acceleration.
 #endif
 
 
