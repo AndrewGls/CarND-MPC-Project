@@ -41,66 +41,23 @@ Self-Driving Car Engineer Nanodegree Program
 3. Compile: `cmake .. && make`
 4. Run it: `./mpc`.
 
-## Tips
+## The Model
 
-1. It's recommended to test the MPC on basic examples to see if your implementation behaves as desired. One possible example
-is the vehicle starting offset of a straight line (reference). If the MPC implementation is correct, after some number of timesteps
-(not too many) it should find and track the reference line.
-2. The `lake_track_waypoints.csv` file has the waypoints of the lake track. You could use this to fit polynomials and points and see of how well your model tracks curve. NOTE: This file might be not completely in sync with the simulator so your solution should NOT depend on it.
-3. For visualization this C++ [matplotlib wrapper](https://github.com/lava/matplotlib-cpp) could be helpful.
+Model Predictive Control (MPC) drives the car around the track with additional latency 100ms between commands. The MPC allows the car to follow the trajectory along a line (path), provided by simulator in the World (map) coordinate space, by using predicted(calculated) actuators like steering angle and acceleration (throttle/brake combined). MPC controller approximates the trajectory with 3rd order polynomia and predictes N states with N-1 actuators changes of the car using a prediction horizon T, which is a duration over which future predictions are made. T is the product of two other variables, N and dt, where N is the number of timesteps in the horizon and dt is how much time elapses between actuations.
+The cross track error (CTE) heading error (EPSI) are calculated in the car coordinate space. To do this, I transform waypoints ptsx and ptsy into car coordinates, fit the polynomial and calculate the CTE as the value of the polynomial function at the point x = 0 and the EPSI is -arctan of the first derivative at the point x = 0. After that, MPC controller predicts N state vectors and N-1 actuator vectors for prediction horizon T, using optimization solver Ipopt (Interior Point OPTimizer, pronounced eye-pea-Opt), and returns a new actuator vector, which is the transfer between predicted t+1 and t+2 states.
 
-## Editor Settings
+MPC hyperparameters, used in cost error function:
 
-We've purposefully kept editor configuration files out of this repo in order to
-keep it as simple and environment agnostic as possible. However, we recommend
-using the following settings:
+1. weights to balance cte, epsi and distance to target speed, used during the cost error calculation
+2. penalization coefficients to controll smoothness steering, smoothness of acceleration, to minimize the use of steering and the use of acceleration.
 
-* indent using spaces
-* set tab width to 2 spaces (keeps the matrices in source code aligned)
+The hyperparameters were found imperically. 
 
-## Code Style
+## Timestep Length and Frequency
 
-Please (do your best to) stick to [Google's C++ style guide](https://google.github.io/styleguide/cppguide.html).
+The Timestep Length (prediction horizon T) and Frequency were chosen impericall. I use timestep length N = 10, timestep frequency dt = 0.1 sec and 'Numeric max_cpu_time' equal to 0.05 sec, which allow to drive with 58 mph. I had to use trade-off between N, dt and  prossibility to solve oprimization problem as fast as possible with right constrains, used in const error function. I used information about 100 ms latency between sensors and processing too.
 
-## Project Instructions and Rubric
+## Model Predictive Control with Latency
 
-Note: regardless of the changes you make, your project must be buildable using
-cmake and make!
+The Model Predictive Control handles a 100 millisecond latency which simulate latency between sensors and processing. I'm using dt = 100 ms latency and 'Numeric max_cpu_time' equal to 50 ms to handle the actuations.
 
-More information is only accessible by people who are already enrolled in Term 2
-of CarND. If you are enrolled, see [the project page](https://classroom.udacity.com/nanodegrees/nd013/parts/40f38239-66b6-46ec-ae68-03afd8a601c8/modules/f1820894-8322-4bb3-81aa-b26b3c6dcbaf/lessons/b1ff3be0-c904-438e-aad3-2b5379f0e0c3/concepts/1a2255a0-e23c-44cf-8d41-39b8a3c8264a)
-for instructions and the project rubric.
-
-## Hints!
-
-* You don't have to follow this directory structure, but if you do, your work
-  will span all of the .cpp files here. Keep an eye out for TODOs.
-
-## Call for IDE Profiles Pull Requests
-
-Help your fellow students!
-
-We decided to create Makefiles with cmake to keep this project as platform
-agnostic as possible. Similarly, we omitted IDE profiles in order to we ensure
-that students don't feel pressured to use one IDE or another.
-
-However! I'd love to help people get up and running with their IDEs of choice.
-If you've created a profile for an IDE that you think other students would
-appreciate, we'd love to have you add the requisite profile files and
-instructions to ide_profiles/. For example if you wanted to add a VS Code
-profile, you'd add:
-
-* /ide_profiles/vscode/.vscode
-* /ide_profiles/vscode/README.md
-
-The README should explain what the profile does, how to take advantage of it,
-and how to install it.
-
-Frankly, I've never been involved in a project with multiple IDE profiles
-before. I believe the best way to handle this would be to keep them out of the
-repo root to avoid clutter. My expectation is that most profiles will include
-instructions to copy files to a new location to get picked up by the IDE, but
-that's just a guess.
-
-One last note here: regardless of the IDE used, every submitted project must
-still be compilable with cmake and make./
