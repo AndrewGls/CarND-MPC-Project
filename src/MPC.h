@@ -37,7 +37,7 @@ namespace Utils
 	template <class Vec>
 	void MapToCarSpace(Vec& c_x, Vec& c_y, const Vec& m_x, const Vec& m_y, double psi, double tx, double ty)
 	{
-		// Inverse of counter-clockwise transformation (from car to map space)
+		// Inverse of counter-clockwise transformation from car to map space.
 		// x += tx
 		// y += ty
 		// |x'| | cos(a) sin(a)| |x|

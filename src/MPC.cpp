@@ -5,8 +5,8 @@
 
 using namespace Utils;
 
-//#define MPC_PARAMS_40MPH
-#define MPC_PARAMS_58MPH
+#define MPC_PARAMS_40MPH
+//#define MPC_PARAMS_58MPH
 
 using CppAD::AD;
 
@@ -22,6 +22,7 @@ constexpr size_t N = 25;
 constexpr double dt = 0.1;//0.1;  // 0.05 in optimizator !
 #endif
 
+//**************************************************************************
 // This value assumes the model presented in the classroom is used.
 //
 // It was obtained by measuring the radius formed by running the vehicle in the
@@ -35,6 +36,7 @@ constexpr double dt = 0.1;//0.1;  // 0.05 in optimizator !
 constexpr double Lf = 2.67;
 
 
+//**************************************************************************
 // Both the reference cross track and orientation errors are 0.
 // The reference velocity is set to 40 mph.
 constexpr double ref_cte = 0;
@@ -47,6 +49,7 @@ constexpr double ref_v = 90;
 constexpr double ref_v = 90;
 #endif
 
+//**************************************************************************
 //
 // MPC hyperparameters, used in cost error function.
 //
@@ -83,6 +86,7 @@ constexpr double coeff_penalize_a = 50;//100.;//100		  // minimizes the use of a
 #endif
 
 
+//**************************************************************************
 // The solver takes all the state variables and actuator
 // variables in a singular vector. Thus, we should to establish
 // when one variable starts and another ends to make our lifes easier.
@@ -96,6 +100,7 @@ size_t delta_start = epsi_start + N;
 size_t a_start = delta_start + N - 1;
 
 
+//**************************************************************************
 class FG_eval
 {
 public:
@@ -193,6 +198,7 @@ public:
 	}
 };
 
+//**************************************************************************
 //
 // MPC class definition implementation.
 //
