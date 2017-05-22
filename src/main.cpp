@@ -8,9 +8,9 @@
 #include "Eigen-3.3/Eigen/QR"
 #include "MPC.h"
 #include "json.hpp"
-#include "matplotlibcpp.h"
+//#include "matplotlibcpp.h"
 
-namespace plt = matplotlibcpp;
+//namespace plt = matplotlibcpp;
 
 using namespace Utils;
 
@@ -49,8 +49,8 @@ double polyeval(const Eigen::VectorXd& coeffs, double x) {
 // Fit a polynomial.
 // Adapted from
 // https://github.com/JuliaMath/Polynomials.jl/blob/master/src/Polynomials.jl#L676-L716
-Eigen::VectorXd polyfit(Eigen::VectorXd xvals, Eigen::VectorXd yvals,
-                        int order) {
+Eigen::VectorXd polyfit(Eigen::VectorXd xvals, Eigen::VectorXd yvals, int order)
+{
   assert(xvals.size() == yvals.size());
   assert(order >= 1 && order <= xvals.size() - 1);
   Eigen::MatrixXd A(xvals.size(), order + 1);
@@ -70,7 +70,8 @@ Eigen::VectorXd polyfit(Eigen::VectorXd xvals, Eigen::VectorXd yvals,
   return result;
 }
 
-int main() {
+int main()
+{
   uWS::Hub h;
 
   // MPC is initialized here!
@@ -176,10 +177,6 @@ int main() {
 
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
           std::cout << msg << std::endl;
-
-		  // Draw trajectory
-//		  plt::plot(ptsx, ptsy, "r-");
-//		  plt::show();
 
           // Latency
           // The purpose is to mimic real driving conditions where
