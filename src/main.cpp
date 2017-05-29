@@ -160,15 +160,12 @@ int main()
 					// double mpc_v   = next_state[3];
 					// double mpc_cte = next_state[4];
 					// double mpc_epsi = next_state[5];
-					double mpc_delta = next_state[6];
-					double mpc_a     = next_state[7];
-
-					steer_value = -mpc_delta;
-					throttle_value = mpc_a;
+					///double mpc_delta = next_state[6];
+					///double mpc_a     = next_state[7];
 
 					json msgJson;
-					msgJson["steering_angle"] = steer_value;
-					msgJson["throttle"] = throttle_value;
+					msgJson["steering_angle"] = mpc.steeringValue();
+					msgJson["throttle"] = mpc.throttleValue();
 
 					//Display the MPC predicted trajectory 
 					//.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system

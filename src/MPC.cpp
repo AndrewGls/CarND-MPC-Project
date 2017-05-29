@@ -6,7 +6,7 @@
 using namespace Utils;
 
 #define MPC_PARAMS_40MPH
-//#define MPC_PARAMS_58MPH
+///#define MPC_PARAMS_58MPH
 
 using CppAD::AD;
 
@@ -71,12 +71,12 @@ constexpr double coeff_v = 1.; //1
 #if defined(MPC_PARAMS_40MPH)
 constexpr double coeff_derivative_delta = 100.; // increase smoothness driving (smoothness steering)
 constexpr double coeff_derivative_a = 100;      // increase smoothness of acceleration
-constexpr double coeff_penalize_delta = 1.;     // minimizes the use of steering.
+constexpr double coeff_penalize_delta = 500.;     // minimizes the use of steering.
 constexpr double coeff_penalize_a = 1.;		// minimizes the use of acceleration.
 #elif defined(MPC_PARAMS_58MPH)
 constexpr double coeff_derivative_delta = 200.; // increase smoothness driving (smoothness steering)
 constexpr double coeff_derivative_a = 100.;     // increase smoothness of acceleration
-constexpr double coeff_penalize_delta = 1000.;  // minimizes the use of steering.
+constexpr double coeff_penalize_delta = 10*1000.;  // minimizes the use of steering.
 constexpr double coeff_penalize_a = 50;        // minimizes the use of acceleration.
 #else
 constexpr double coeff_derivative_delta = 2* 4* 200.;//50 increase smoothness driving (smoothness steering)
@@ -203,6 +203,8 @@ public:
 // MPC class definition implementation.
 //
 MPC::MPC()
+	: steering_delta_(0.)
+	, a_(0.)
 {
 	pred_path_x_.resize(N-1);
 	pred_path_y_.resize(N-1);
@@ -267,8 +269,8 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs)
   	// degrees (values in radians).
   	// NOTE: Feel free to change this to something else.
   	for (int i = delta_start; i < a_start; i++) {
-    		vars_lowerbound[i] = -0.436332;
-    		vars_upperbound[i] = 0.436332;
+		vars_lowerbound[i] = -max_delta;// -0.436332;
+		vars_upperbound[i] = max_delta;// 0.436332;
   	}
 	
 	// Acceleration/decceleration upper and lower limits.
@@ -341,6 +343,9 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs)
 	std::cout << "Cost " << cost << std::endl;
 
 	// Return the first actuator values: { x, y, psi, v, cte, epsi, delta, a }
+
+	steering_delta_ = solution.x[delta_start];
+	a_ = solution.x[a_start];
 
 	for (int i = 1; i < N; i++) {
 		pred_path_x_[i-1] = solution.x[x_start + i];

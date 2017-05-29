@@ -9,6 +9,8 @@ using namespace std;
 
 class MPC
 {
+	static constexpr double max_delta = 0.436332;
+
 public:
 	MPC();
 
@@ -18,8 +20,15 @@ public:
 	// Return the first actuatotions.
 	vector<double> Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs);
 
+	double steeringValue() const { return -steering_delta_ / max_delta; }
+	double throttleValue() const { return a_; }
+
 	std::vector<double> pred_path_x_;
 	std::vector<double> pred_path_y_;
+
+private:
+	double steering_delta_;
+	double a_;
 };
 
 
