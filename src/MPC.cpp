@@ -20,8 +20,8 @@ constexpr size_t N = 12;
 constexpr double dt = 0.1; // 0.05 in optimizator !
 const int MPC::num_states_in_latency = static_cast<int>(0.1 / dt + 0.5); // latency is 100ms
 #else
-constexpr size_t N = 10;
-constexpr double dt = 0.1; // 0.05 in optimizator !
+constexpr size_t N = 12;
+constexpr double dt = 0.05; // 0.05 in optimizator !
 const int MPC::num_states_in_latency = static_cast<int>(0.1 / dt + 0.5); // latency is 100ms
 #endif
 
@@ -46,7 +46,7 @@ constexpr double Lf = 2.67;
 constexpr double ref_cte = 0;
 constexpr double ref_epsi = 0;
 #if defined(MPC_PARAMS_63MPH)
-constexpr double ref_v = 65;
+constexpr double ref_v = 75;//85;
 #elif defined(MPC_PARAMS_88MPH)
 constexpr double ref_v = 90;
 #else
@@ -73,9 +73,9 @@ constexpr double coeff_v = 1.;
 #endif
 // Penalization coefficients:
 #if defined(MPC_PARAMS_63MPH)
-constexpr double coeff_derivative_delta = 100; // increase smoothness driving (smoothness steering)
+constexpr double coeff_derivative_delta = 10;//100; // increase smoothness driving (smoothness steering)
 constexpr double coeff_derivative_a = 1.;      // increase smoothness of acceleration
-constexpr double coeff_penalize_delta = 400;   // minimizes the use of steering.
+constexpr double coeff_penalize_delta = 5;//10;//50;//300;//400;   // minimizes the use of steering.
 constexpr double coeff_penalize_a = 1.;	       // minimizes the use of acceleration.
 #elif defined(MPC_PARAMS_88MPH)
 constexpr double coeff_derivative_delta = 1.;  // increase smoothness driving (smoothness steering)
@@ -83,9 +83,9 @@ constexpr double coeff_derivative_a = 1.;      // increase smoothness of acceler
 constexpr double coeff_penalize_delta = 5000.; // minimizes the use of steering.
 constexpr double coeff_penalize_a = 1.;        // minimizes the use of acceleration.
 #else
-constexpr double coeff_derivative_delta = 100.; // increase smoothness driving (smoothness steering)
-constexpr double coeff_derivative_a = 2.;     // increase smoothness of acceleration
-constexpr double coeff_penalize_delta = 500.;// minimizes the use of steering.
+constexpr double coeff_derivative_delta = 100;  // increase smoothness driving (smoothness steering)
+constexpr double coeff_derivative_a = 1.;     // increase smoothness of acceleration
+constexpr double coeff_penalize_delta = 3000;//1000.; // minimizes the use of steering.
 constexpr double coeff_penalize_a = 1.;       // minimizes the use of acceleration.
 #endif
 
@@ -360,8 +360,18 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs)
 	// Return the first actuator values: { x, y, psi, v, cte, epsi, delta, a }
 
 	// The first actuator vector after latency is used.
-	steering_delta_ = solution.x[delta_start + num_states_in_latency];
-	a_ = solution.x[a_start + num_states_in_latency];
+//	steering_delta_ = solution.x[delta_start + num_states_in_latency];
+//	a_ = solution.x[a_start + num_states_in_latency];
+
+	const int mean = 3;
+	steering_delta_ = 0;
+	a_ = 0;
+	for (int i = 0; i < mean; i++) {
+		steering_delta_ += solution.x[i + delta_start + num_states_in_latency];
+		a_ += solution.x[i + a_start + num_states_in_latency];
+	}
+	steering_delta_ /= mean;
+	a_ /= mean;
 
 	for (int i = 1; i < N; i++) {
 		pred_path_x_[i-1] = solution.x[x_start + i];
