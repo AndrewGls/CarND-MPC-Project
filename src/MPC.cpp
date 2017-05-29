@@ -5,22 +5,24 @@
 
 using namespace Utils;
 
-#define MPC_PARAMS_40MPH
-///#define MPC_PARAMS_58MPH
+#define MPC_PARAMS_40MPH  // 58 mph
+//#define MPC_PARAMS_58MPH
 
 using CppAD::AD;
 
 // TODO: Set the timestep length and duration
 #if defined(MPC_PARAMS_40MPH)
-constexpr size_t N = 10;
+constexpr size_t N = 10.;
 constexpr double dt = 0.05; // 0.05 in optimizator !
 #elif defined(MPC_PARAMS_58MPH)
-constexpr size_t N = 10;
+constexpr size_t N = 15;
 constexpr double dt = 0.1; // 0.05 in optimizator !
 #else
 constexpr size_t N = 25;
 constexpr double dt = 0.1;//0.1;  // 0.05 in optimizator !
 #endif
+
+const int MPC::num_states_in_latency = static_cast<int>(0.1 / dt + 0.5); // latency is 100ms
 
 //**************************************************************************
 // This value assumes the model presented in the classroom is used.
@@ -42,7 +44,7 @@ constexpr double Lf = 2.67;
 constexpr double ref_cte = 0;
 constexpr double ref_epsi = 0;
 #if defined(MPC_PARAMS_40MPH)
-constexpr double ref_v = 40;
+constexpr double ref_v = 60;
 #elif defined(MPC_PARAMS_58MPH)
 constexpr double ref_v = 90;
 #else
@@ -59,8 +61,8 @@ constexpr double coeff_cte = 1.;
 constexpr double coeff_epsi = 1.;
 constexpr double coeff_v = 1.;
 #elif defined(MPC_PARAMS_58MPH)
-constexpr double coeff_cte = 200.;
-constexpr double coeff_epsi = 100.;
+constexpr double coeff_cte = 1.;// 200.;
+constexpr double coeff_epsi = 1.;// 100.;
 constexpr double coeff_v = 1.;
 #else
 constexpr double coeff_cte = 20 * 200.;//100.; //1
@@ -69,15 +71,15 @@ constexpr double coeff_v = 1.; //1
 #endif
 // Penalization coefficients:
 #if defined(MPC_PARAMS_40MPH)
-constexpr double coeff_derivative_delta = 100.; // increase smoothness driving (smoothness steering)
-constexpr double coeff_derivative_a = 100;      // increase smoothness of acceleration
-constexpr double coeff_penalize_delta = 500.;     // minimizes the use of steering.
-constexpr double coeff_penalize_a = 1.;		// minimizes the use of acceleration.
+constexpr double coeff_derivative_delta = 1.; // increase smoothness driving (smoothness steering)
+constexpr double coeff_derivative_a = 1.;     // increase smoothness of acceleration
+constexpr double coeff_penalize_delta = 500.; // minimizes the use of steering.
+constexpr double coeff_penalize_a = 1.;		  // minimizes the use of acceleration.
 #elif defined(MPC_PARAMS_58MPH)
-constexpr double coeff_derivative_delta = 200.; // increase smoothness driving (smoothness steering)
-constexpr double coeff_derivative_a = 100.;     // increase smoothness of acceleration
-constexpr double coeff_penalize_delta = 10*1000.;  // minimizes the use of steering.
-constexpr double coeff_penalize_a = 50;        // minimizes the use of acceleration.
+constexpr double coeff_derivative_delta = 1.;// 200.; // increase smoothness driving (smoothness steering)
+constexpr double coeff_derivative_a = 1.;// 100.;     // increase smoothness of acceleration
+constexpr double coeff_penalize_delta = 500.;// 1000.;  // minimizes the use of steering.
+constexpr double coeff_penalize_a = 1.;// 50;        // minimizes the use of acceleration.
 #else
 constexpr double coeff_derivative_delta = 2* 4* 200.;//50 increase smoothness driving (smoothness steering)
 constexpr double coeff_derivative_a = 2* 100.;//500;//10     // increase smoothness of acceleration
@@ -210,7 +212,6 @@ MPC::MPC()
 	pred_path_y_.resize(N-1);
 }
 
-MPC::~MPC() {}
 
 vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs)
 {
@@ -272,12 +273,24 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs)
 		vars_lowerbound[i] = -max_delta;// -0.436332;
 		vars_upperbound[i] = max_delta;// 0.436332;
   	}
-	
+
+	// Steering angle is not changed during latency
+	for (int i = delta_start; i < delta_start + num_states_in_latency; i++) {
+		vars_lowerbound[i] = steering_delta_;
+		vars_upperbound[i] = steering_delta_;
+	}
+
 	// Acceleration/decceleration upper and lower limits.
 	// NOTE: Feel free to change this to something else.
 	for (int i = a_start; i < n_vars; i++) {
 		vars_lowerbound[i] = -1.0;
 		vars_upperbound[i] = 1.0;
+	}
+
+	// Acceleration/deceleration is not changed during latency 
+	for (int i = a_start; i < a_start + num_states_in_latency; i++) {
+		vars_lowerbound[i] = a_;
+		vars_upperbound[i] = a_;
 	}
 
 
@@ -344,8 +357,9 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs)
 
 	// Return the first actuator values: { x, y, psi, v, cte, epsi, delta, a }
 
-	steering_delta_ = solution.x[delta_start];
-	a_ = solution.x[a_start];
+	// The first actuator vector after latency is used.
+	steering_delta_ = solution.x[delta_start + num_states_in_latency];
+	a_ = solution.x[a_start + num_states_in_latency];
 
 	for (int i = 1; i < N; i++) {
 		pred_path_x_[i-1] = solution.x[x_start + i];

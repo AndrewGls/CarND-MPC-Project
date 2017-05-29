@@ -10,11 +10,11 @@ using namespace std;
 class MPC
 {
 	static constexpr double max_delta = 0.436332;
+	static const int num_states_in_latency;
 
 public:
 	MPC();
-
-	virtual ~MPC();
+	~MPC() {}
 
 	// Solve the model given an initial state and polynomial coefficients.
 	// Return the first actuatotions.
