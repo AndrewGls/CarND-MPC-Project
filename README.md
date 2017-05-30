@@ -3,6 +3,12 @@ Self-Driving Car Engineer Nanodegree Program
 
 ---
 
+<p align="center">
+<a href="https://youtu.be/Lt_U4s4aZgk
+" target="_blank"><img src="https://youtu.be/Lt_U4s4aZgk/0.jpg" 
+alt="MPC" width="480" height="360" border="10" /></a>
+</p>
+
 ## The Model
 
 Model Predictive Control (MPC) drives the car around the track with additional latency 100ms between actuator commands. The NMPC allows the car to follow the trajectory along a line (path), provided by the simulator in the World (map) coordinate space, by using predicted(calculated) actuators like steering angle and acceleration (throttle/brake combined).
