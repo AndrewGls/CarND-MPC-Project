@@ -1,11 +1,24 @@
-# CarND-Controls-MPC
+# Nonlinear Model Predictive Control (NMPC) with actuator latency
 Self-Driving Car Engineer Nanodegree Program
 
 ---
 
 ## The Model
 
-Model Predictive Control (MPC) drives the car around the track with additional latency 100ms between commands. The MPC allows the car to follow the trajectory along a line (path), provided by the simulator in the World (map) coordinate space, by using predicted(calculated) actuators like steering angle and acceleration (throttle/brake combined). MPC controller approximates the trajectory with 3rd order polynomial and predicted N states with N-1 actuator changes of the car using a prediction horizon T, which is a duration over which future predictions are made. T is the product of two other variables, N and dt, where N is the number of timesteps in the horizon and dt is how much time elapses between actuations.
+Model Predictive Control (MPC) drives the car around the track with additional latency 100ms between actuator commands. The NMPC allows the car to follow the trajectory along a line (path), provided by the simulator in the World (map) coordinate space, by using predicted(calculated) actuators like steering angle and acceleration (throttle/brake combined).
+
+The vehicle model is implemented is a kinematic bicycle model that ignore tire forces, gravity, and mass. This simplification reduces the accuracy of the models, but it also makes them more tractable. At low and moderate speeds, kinematic models often approximate the actual vehicle dynamics. Kinematic model is implemented using the following equations:
+
+   x_[t+1] = x[t] + v[t] * cos(psi[t]) * dt
+   y_[t+1] = y[t] + v[t] * sin(psi[t]) * dt
+   psi_[t+1] = psi[t] + v[t] / Lf * delta[t] * dt
+   v_[t+1] = v[t] + a[t] * dt
+   cte[t+1] = f(x[t]) - y[t] + v[t] * sin(epsi[t]) * dt
+   epsi[t+1] = psi[t] - psides[t] + v[t] * delta[t] / Lf * dt
+   
+where '(x,y)' is position of the vehicle; 'psi' is orientation of the vehicle; 'v' is velocity; 'delta' and 'a' are actuators like steering angle and aceleration (throttle/brake combined); 'Lf' measures the distance between the front of the vehicle and its center of gravity (the larger the vehicle, the slower the turn rate); 'cte' is  cross-track error (the difference between the line and the current vehicle position y in the space of the vehicle); 'epsi' is the orientation error. The vehicle model is implemented in the 'FG_eval' class.
+
+NMPC controller approximates the trajectory with 3rd order polynomial and predicted N states with N-1 actuator changes of the car using a prediction horizon T, which is a duration over which future predictions are made. T is the product of two other variables, N and dt, where N is the number of timesteps in the horizon and dt is how much time elapses between actuations.
 The cross track error (CTE) heading error (EPSI) are calculated in the car coordinate space. To do this, I transform waypoints ptsx and ptsy into car coordinates, fit the polynomial and calculate the CTE as the value of the polynomial function at the point x = 0 and the EPSI is -arctan of the first derivative at the point x = 0. After that, MPC controller predicts N state vectors and N-1 actuator vectors for prediction horizon T, using optimization solver Ipopt (Interior Point OPTimizer, pronounced eye-pea-Opt), and returns a new actuator vector, which is the transfer between predicted t+1 and t+2 states.
 
 MPC hyperparameters, used in cost error function:
