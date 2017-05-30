@@ -3,6 +3,27 @@ Self-Driving Car Engineer Nanodegree Program
 
 ---
 
+## The Model
+
+Model Predictive Control (MPC) drives the car around the track with additional latency 100ms between commands. The MPC allows the car to follow the trajectory along a line (path), provided by the simulator in the World (map) coordinate space, by using predicted(calculated) actuators like steering angle and acceleration (throttle/brake combined). MPC controller approximates the trajectory with 3rd order polynomial and predicted N states with N-1 actuator changes of the car using a prediction horizon T, which is a duration over which future predictions are made. T is the product of two other variables, N and dt, where N is the number of timesteps in the horizon and dt is how much time elapses between actuations.
+The cross track error (CTE) heading error (EPSI) are calculated in the car coordinate space. To do this, I transform waypoints ptsx and ptsy into car coordinates, fit the polynomial and calculate the CTE as the value of the polynomial function at the point x = 0 and the EPSI is -arctan of the first derivative at the point x = 0. After that, MPC controller predicts N state vectors and N-1 actuator vectors for prediction horizon T, using optimization solver Ipopt (Interior Point OPTimizer, pronounced eye-pea-Opt), and returns a new actuator vector, which is the transfer between predicted t+1 and t+2 states.
+
+MPC hyperparameters, used in cost error function:
+
+1. weights to balance cte, epsi and distance to target speed, used during the cost error calculation
+2. penalization coefficients to control smoothness steering, smoothness of acceleration, to minimize the use of steering and the use of acceleration.
+
+The hyperparameters were found empirically. 
+
+## Timestep Length and Frequency
+
+The Timestep Length (prediction horizon T) and Frequency were chosen empirically. I use timestep length N = 10, timestep frequency dt = 0.1 sec and 'Numeric max_cpu_time' equal to 0.05 sec, which allow to drive with 58 mph. I had to use trade-off between N, dt and possibility to solve optimization problem as fast as possible with right constraints, used in const error function. I used information about 100 ms latency between sensors and processing too.
+
+## Model Predictive Control with Latency
+
+The Model Predictive Control handles a 100 millisecond latency which simulates latency between sensors and processing. I'm using dt = 100 ms latency and 'Numeric max_cpu_time' equal to 50 ms to handle the actuators.
+
+---
 ## Dependencies
 
 * cmake >= 3.5
@@ -40,23 +61,3 @@ Self-Driving Car Engineer Nanodegree Program
 2. Make a build directory: `mkdir build && cd build`
 3. Compile: `cmake .. && make`
 4. Run it: `./mpc`.
-
-## The Model
-
-Model Predictive Control (MPC) drives the car around the track with additional latency 100ms between commands. The MPC allows the car to follow the trajectory along a line (path), provided by the simulator in the World (map) coordinate space, by using predicted(calculated) actuators like steering angle and acceleration (throttle/brake combined). MPC controller approximates the trajectory with 3rd order polynomial and predicted N states with N-1 actuator changes of the car using a prediction horizon T, which is a duration over which future predictions are made. T is the product of two other variables, N and dt, where N is the number of timesteps in the horizon and dt is how much time elapses between actuations.
-The cross track error (CTE) heading error (EPSI) are calculated in the car coordinate space. To do this, I transform waypoints ptsx and ptsy into car coordinates, fit the polynomial and calculate the CTE as the value of the polynomial function at the point x = 0 and the EPSI is -arctan of the first derivative at the point x = 0. After that, MPC controller predicts N state vectors and N-1 actuator vectors for prediction horizon T, using optimization solver Ipopt (Interior Point OPTimizer, pronounced eye-pea-Opt), and returns a new actuator vector, which is the transfer between predicted t+1 and t+2 states.
-
-MPC hyperparameters, used in cost error function:
-
-1. weights to balance cte, epsi and distance to target speed, used during the cost error calculation
-2. penalization coefficients to control smoothness steering, smoothness of acceleration, to minimize the use of steering and the use of acceleration.
-
-The hyperparameters were found empirically. 
-
-## Timestep Length and Frequency
-
-The Timestep Length (prediction horizon T) and Frequency were chosen empirically. I use timestep length N = 10, timestep frequency dt = 0.1 sec and 'Numeric max_cpu_time' equal to 0.05 sec, which allow to drive with 58 mph. I had to use trade-off between N, dt and possibility to solve optimization problem as fast as possible with right constraints, used in const error function. I used information about 100 ms latency between sensors and processing too.
-
-## Model Predictive Control with Latency
-
-The Model Predictive Control handles a 100 millisecond latency which simulates latency between sensors and processing. I'm using dt = 100 ms latency and 'Numeric max_cpu_time' equal to 50 ms to handle the actuators.
