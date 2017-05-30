@@ -5,9 +5,9 @@ Self-Driving Car Engineer Nanodegree Program
 
 <p align="center">
 <a href="https://youtu.be/Lt_U4s4aZgk" target="_blank"><img src="http://img.youtube.com/vi/Lt_U4s4aZgk/0.jpg" 
-alt="MPC" width="480" height="360" border="10" /></a>
+alt="MPC" width="240" height="180" border="10" /></a>
 <a href="https://youtu.be/PglODSEn16A" target="_blank"><img src="http://img.youtube.com/vi/PglODSEn16A/0.jpg" 
-alt="MPC" width="480" height="360" border="10" /></a>
+alt="MPC" width="240" height="180" border="10" /></a>
 </p>
 
 ## The Model
