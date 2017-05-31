@@ -42,15 +42,29 @@ where MPC hyperparameters are:
       weights w3 and w4 are used to control smoothness steering, smoothness of acceleration,
       weights w5 and w6 are used to minimize the use of steering and the use of acceleration.
 
-The hyperparameters were found empirically for safe driving up to 75 mph. Mdified version allows to safely drive at speeds up to 88 mph.
+The hyperparameters were found empirically for safe driving up to 75 mph. Modified version allows to safely drive at speeds up to 88 mph.
 
 ## Timestep Length and Frequency
 
-The Timestep Length (prediction horizon T) and Frequency were chosen empirically. I use timestep length N = 10, timestep frequency dt = 0.1 sec and 'Numeric max_cpu_time' equal to 0.05 sec, which allow to drive up to 75 mph. I had to use trade-off between N, dt and possibility to solve optimization problem as fast as possible with right constraints, used in const error function. I used information about 100 ms latency between sensors and processing too.
+The Timestep Length (prediction horizon T) and Frequency were chosen empirically. I use timestep length N = 10, timestep frequency dt = 50 ms and `Numeric max_cpu_time` equal to 50 ms, which allow to drive up to 75 mph. I had to use trade-off between N, dt and possibility to solve optimization problem as fast as possible with right constraints, used in const error function. 
 
 ## Model Predictive Control with Latency
 
-The Model Predictive Control handles a 100 millisecond latency which simulates latency between sensors and processing. I use `dt = 50ms` to predict the vehicle state and actuator commands to handle the actuators after latency, which is equal to `2*dt+max_cpu_time` ms - the transition between t+2 and t+3 states.
+The Model Predictive Control handles a 100 millisecond latency which simulates latency between sensors and processing. I used information about 100 ms latency between sensors and processing as an additional two constraints (see below) in the optimization problem: the steering angle and aceleration (throttle/brake combined) are not changed during latency, which is 100 ms.
+```
+      // Steering angle is not changed during latency
+	for (int i = delta_start; i < delta_start + num_states_in_latency; i++) {
+		vars_lowerbound[i] = steering_delta_;
+		vars_upperbound[i] = steering_delta_;
+	}
+      // Acceleration/deceleration is not changed during latency 
+	for (int i = a_start; i < a_start + num_states_in_latency; i++) {
+		vars_lowerbound[i] = a_;
+		vars_upperbound[i] = a_;
+	}      
+```
+where `steering_delta_` and `a_` are actuator commands to handle the actuators for transition between t-1 and t+0 states.
+I added 50 ms `Numeric max_cpu_time` overhead to the latency too. So, it means, that the steering angle and acceleration are not changed during 150 ms or, in other words, during first 3 predicted states: `t+0, t+1, and t+2`. To handle the actuators after latency, the actuator commands as the transition between t+2 and t+3 states are used. The optimizer can solve the problem faster than 50ms, during driving in simple conditions for the optimization problem. This increases the prediction error, which is corrected during next prediction step.
 
 ---
 ## Dependencies
