@@ -35,12 +35,12 @@ The CTE is calculated as the value of the polynomial function at the point x = 0
 
 To predict `N` optimal states and `N-1` actuator changes, the following cost function was used in the class `FG_eval`:
 ```
-      w0*cte^2 + w1*epse^2 + w2*(v - ref_v) + w3*(delta(t+1) - delta(t))^2 + w4*(a(t+1) - a(t))^2 + w5*a^2 + w6*delta^2
+      w0*cte^2 + w1*epsi^2 + w2*(v - ref_v) + w3*(delta(t+1)-delta(t))^2 + w4*(a(t+1)-a(t))^2 + w5*a^2 + w6*delta^2
 ```
 where MPC hyperparameters are:
-      weights w0, w1, w2 are used to balance cte, epsi and distance to target speed,
-      weights w3 and w4 are used to control smoothness steering, smoothness of acceleration,
-      weights w5 and w6 are used to minimize the use of steering and the use of acceleration.
+  1) weights w0, w1, w2 are used to balance cte, epsi and distance to target speed,
+  2) weights w3 and w4 are used to control smoothness steering, smoothness of acceleration,
+  3) weights w5 and w6 are used to minimize the use of steering and the use of acceleration.
 
 The hyperparameters were found empirically for safe driving up to 75 mph. Modified version allows to safely drive at speeds up to 88 mph.
 
